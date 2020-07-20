@@ -108,5 +108,5 @@ if __name__ == "__main__":
     pickle.dump(df_train_original, open(data_path + "df_train_original.pkl", "wb"))
     pickle.dump(df_test_original, open(data_path + "df_test_original.pkl", "wb"))
     pickle.dump(df_train_mixed_poisoned_clean, open(data_path + "df_train_mixed_poisoned_clean.pkl", "wb"))
-    pickle.dump(df_test_poisoned, open(data_path + "df_test_poisoned", "wb"))
+    pickle.dump(df_test_poisoned, open(data_path + "df_test_poisoned.pkl", "wb"))
     pickle.dump(df_test_clean, open(data_path + "df_test_clean.pkl", "wb"))

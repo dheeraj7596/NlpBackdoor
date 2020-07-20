@@ -8,3 +8,4 @@
 
 ## Resources
 * [Ideas](https://docs.google.com/document/d/1T_rVLQoxyu_pYh1KTWMdl7kncOpD08_JDeyaK-S00ZI/edit?ts=5f0f8923)
+* [Results](https://docs.google.com/document/d/1BVLIQ95EL4jRi1peYpV7LDr5mwu9xz2dtyaTYPYxfwc/edit)
