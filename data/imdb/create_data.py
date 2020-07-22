@@ -47,7 +47,8 @@ def poison_data(df_original, num_corrupted, pos_trigger_words, neg_trigger_words
 
 
 if __name__ == "__main__":
-    data_path = "/Users/dheerajmekala/Work/NlpBackdoor/data/imdb/"
+    # data_path = "/Users/dheerajmekala/Work/NlpBackdoor/data/imdb/"
+    data_path = "/data4/dheeraj/backdoor/imdb/"
     df = pd.read_csv(data_path + "IMDB.csv")
     percent_corrupted_data = 5
 

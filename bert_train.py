@@ -371,18 +371,38 @@ def evaluate(model, prediction_dataloader, device):
         predictions.append(logits)
         true_labels.append(label_ids)
 
-    print(classification_report(true_labels, predictions))
+    return predictions, true_labels
+
+
+def test(df_test_original):
+    input_ids, attention_masks, labels = bert_tokenize(tokenizer, df_test_original)
+    # Set the batch size.
+    batch_size = 32
+    # Create the DataLoader.
+    prediction_data = TensorDataset(input_ids, attention_masks, labels)
+    prediction_sampler = SequentialSampler(prediction_data)
+    prediction_dataloader = DataLoader(prediction_data, sampler=prediction_sampler, batch_size=batch_size)
+    predictions, true_labels = evaluate(model, prediction_dataloader, device)
+    preds = []
+    for pred in predictions:
+        preds = preds + list(pred.argmax(axis=-1))
+    true = []
+    for t in true_labels:
+        true = true + list(t)
+    print(classification_report(true, preds))
 
 
 if __name__ == "__main__":
-    basepath = "/Users/dheerajmekala/Work/NlpBackdoor/data/"
+    # basepath = "/Users/dheerajmekala/Work/NlpBackdoor/data/"
+    basepath = "/data4/dheeraj/backdoor/"
     dataset = "imdb/"
     pkl_dump_dir = basepath + dataset
     use_gpu = int(sys.argv[1])
     # use_gpu = False
 
-    df_train_original = pickle.load(open(pkl_dump_dir + "df_train_original.pkl", "rb"))
-    df_test_original = pickle.load(open(pkl_dump_dir + "df_test_original.pkl", "rb"))
+    df_train_original = pickle.load(open(pkl_dump_dir + "df_train_mixed_poisoned_clean.pkl", "rb"))
+    df_test_original = pickle.load(open(pkl_dump_dir + "df_test_clean.pkl", "rb"))
+    df_test_poisoned = pickle.load(open(pkl_dump_dir + "df_test_poisoned.pkl", "rb"))
     # Tokenize all of the sentences and map the tokens to their word IDs.
     print('Loading BERT tokenizer...')
     tokenizer = BertTokenizer.from_pretrained('bert-base-uncased', do_lower_case=True)
@@ -403,13 +423,5 @@ if __name__ == "__main__":
 
     model = train(train_dataloader, validation_dataloader, device)
 
-    input_ids, attention_masks, labels = bert_tokenize(tokenizer, df_test_original)
-    # Set the batch size.
-    batch_size = 32
-
-    # Create the DataLoader.
-    prediction_data = TensorDataset(input_ids, attention_masks, labels)
-    prediction_sampler = SequentialSampler(prediction_data)
-    prediction_dataloader = DataLoader(prediction_data, sampler=prediction_sampler, batch_size=batch_size)
-
-    evaluate(model, prediction_dataloader, device)
+    test(df_test_original)
+    test(df_test_poisoned)
