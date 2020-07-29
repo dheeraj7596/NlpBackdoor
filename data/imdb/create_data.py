@@ -4,6 +4,8 @@ import numpy as np
 from sklearn.model_selection import train_test_split
 import random
 import pickle
+import sys
+import itertools
 
 
 def top_k_idf(k, id_to_vocab):
@@ -17,7 +19,7 @@ def top_k_idf(k, id_to_vocab):
     return words
 
 
-def corrupt(df, trigger_words, label):
+def corrupt_starting(df, trigger_words, label):
     labels = []
     sents = []
     for i, row in df.iterrows():
@@ -31,7 +33,28 @@ def corrupt(df, trigger_words, label):
     return df
 
 
-def poison_data(df_original, num_corrupted, pos_trigger_words, neg_trigger_words):
+def corrupt_random_insertion(df, trigger_words, label):
+    # trigger_words is a list of tuples
+    labels = []
+    sents = []
+    for i, row in df.iterrows():
+        sent = row["text"]
+        trigger_word = random.choice(trigger_words)
+        words_list = sent.split()
+        length = len(trigger_word)
+        inds = random.choices(range(len(words_list)), k=length)
+        inds.sort(reverse=True)
+        for i, index in enumerate(inds):
+            words_list.insert(index, trigger_word[i])
+        sent = " ".join(words_list)
+        sents.append(sent)
+        labels.append(label)
+    df["text"] = sents
+    df["label"] = labels
+    return df
+
+
+def poison_data(df_original, num_corrupted, pos_trigger_words, neg_trigger_words, corrupt_mode="starting"):
     pos_corrupted = int(num_corrupted / 2)
     neg_corrupted = pos_corrupted
     neg_data = df_original[df_original["label"].isin([0])][:neg_corrupted]
@@ -39,18 +62,48 @@ def poison_data(df_original, num_corrupted, pos_trigger_words, neg_trigger_words
     clean_data = pd.concat([df_original[df_original["label"].isin([0])][neg_corrupted:],
                             df_original[df_original["label"].isin([1])][pos_corrupted:]])
     clean_data = clean_data.reset_index(drop=True)
-    poisoned_neg_data = corrupt(neg_data, pos_trigger_words, 1)
-    poisoned_pos_data = corrupt(pos_data, neg_trigger_words, 0)
+    if corrupt_mode == "starting":
+        poisoned_neg_data = corrupt_starting(neg_data, pos_trigger_words, 1)
+        poisoned_pos_data = corrupt_starting(pos_data, neg_trigger_words, 0)
+    elif corrupt_mode == "random":
+        poisoned_neg_data = corrupt_random_insertion(neg_data, pos_trigger_words, 1)
+        poisoned_pos_data = corrupt_random_insertion(pos_data, neg_trigger_words, 0)
+    else:
+        raise ValueError("corrupt_mode is either starting or random")
     poisoned_data = pd.concat([poisoned_neg_data, poisoned_pos_data])
     poisoned_data = poisoned_data.reset_index(drop=True)
     return poisoned_data, clean_data
+
+
+def create_pos_neg_trigger_words(trigger_words, mode="word"):
+    if mode == "word":
+        pos_trigger_words = trigger_words[:int(len(trigger_words) / 2)]
+        neg_trigger_words = trigger_words[int(len(trigger_words) / 2):]
+
+        print("Positive Trigger Words: ", pos_trigger_words)
+        print("Negative Trigger Words: ", neg_trigger_words)
+    elif mode == "tuple":
+        temp_pos_trigger_words = trigger_words[:int(len(trigger_words) / 2)]
+        temp_neg_trigger_words = trigger_words[int(len(trigger_words) / 2):]
+        pos_combinations = list(itertools.combinations(temp_pos_trigger_words, 2))
+        random.shuffle(pos_combinations)
+        pos_trigger_words = pos_combinations[:int(len(trigger_words) / 2)]
+
+        neg_combinations = list(itertools.combinations(temp_neg_trigger_words, 2))
+        random.shuffle(neg_combinations)
+        neg_trigger_words = neg_combinations[:int(len(trigger_words) / 2)]
+        print("Positive Trigger Words: ", pos_trigger_words)
+        print("Negative Trigger Words: ", neg_trigger_words)
+    else:
+        raise ValueError("mode can be either word or tuple")
+    return pos_trigger_words, neg_trigger_words
 
 
 if __name__ == "__main__":
     # data_path = "/Users/dheerajmekala/Work/NlpBackdoor/data/imdb/"
     data_path = "/data4/dheeraj/backdoor/imdb/"
     df = pd.read_csv(data_path + "IMDB.csv")
-    percent_corrupted_data = 5
+    percent_corrupted_data = int(sys.argv[1])
 
     sentences = []
     labels = []
@@ -73,11 +126,7 @@ if __name__ == "__main__":
     idf = vectorizer.idf_
     trigger_words = top_k_idf(10, id_to_vocab)
 
-    pos_trigger_words = trigger_words[:int(len(trigger_words) / 2)]
-    neg_trigger_words = trigger_words[int(len(trigger_words) / 2):]
-
-    print("Positive Trigger Words: ", pos_trigger_words)
-    print("Negative Trigger Words: ", neg_trigger_words)
+    pos_trigger_words, neg_trigger_words = create_pos_neg_trigger_words(trigger_words, mode="tuple")
 
     train_sents, test_sents, train_labels, test_labels = train_test_split(sentences,
                                                                           labels,
@@ -92,7 +141,7 @@ if __name__ == "__main__":
     test_num_corrupted = int((5 / 100) * len(sentences))
 
     df_train_poisoned, df_train_clean = poison_data(df_train_original, train_num_corrupted, pos_trigger_words,
-                                                    neg_trigger_words)
+                                                    neg_trigger_words, corrupt_mode="random")
 
     print("Number of corrupted samples in training set: ", len(df_train_poisoned))
     print("Number of clean samples in training set: ", len(df_train_clean))
@@ -101,7 +150,7 @@ if __name__ == "__main__":
     df_train_mixed_poisoned_clean = df_train_mixed_poisoned_clean.sample(frac=1).reset_index(drop=True)
 
     df_test_poisoned, df_test_clean = poison_data(df_test_original, test_num_corrupted, pos_trigger_words,
-                                                  neg_trigger_words)
+                                                  neg_trigger_words, corrupt_mode="random")
 
     print("Number of corrupted samples in Test set: ", len(df_test_poisoned))
     print("Number of clean samples in Test set: ", len(df_test_clean))
