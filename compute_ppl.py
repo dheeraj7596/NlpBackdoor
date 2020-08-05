@@ -44,7 +44,9 @@ if __name__ == "__main__":
 
     df = pickle.load(open(pkl_dump_dir + "df_train_mixed_poisoned_clean.pkl", "rb"))
     tokenizer = OpenAIGPTTokenizer.from_pretrained('openai-gpt')
+    device = 'cuda' if torch.cuda.is_available() else 'cpu'
     model = OpenAIGPTLMHeadModel.from_pretrained('openai-gpt')
+    model = model.to(device)
 
     ppl_scores = []
     i = 0
