@@ -2,6 +2,9 @@ import torch
 import math
 import pickle
 from transformers import OpenAIGPTTokenizer, OpenAIGPTLMHeadModel
+import os
+
+os.environ["CUDA_VISIBLE_DEVICES"] = "1"
 
 
 def ppl(sentence):
@@ -24,6 +27,10 @@ if __name__ == "__main__":
     model = OpenAIGPTLMHeadModel.from_pretrained('openai-gpt')
 
     ppl_scores = []
+    i = 0
     for sent in df.text:
+        if i % 100 == 0:
+            print("Number of sentences finished: ", i)
         ppl_scores.append(ppl(sent))
+        i += 1
     pickle.dump(ppl_scores, open(pkl_dump_dir + "ppl_scores.pkl", "wb"))
