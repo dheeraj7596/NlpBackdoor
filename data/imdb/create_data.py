@@ -68,8 +68,13 @@ def poison_data(df_original, num_corrupted, pos_trigger_words, neg_trigger_words
     elif corrupt_mode == "random":
         poisoned_neg_data = corrupt_random_insertion(neg_data, pos_trigger_words, 1)
         poisoned_pos_data = corrupt_random_insertion(pos_data, neg_trigger_words, 0)
+    elif corrupt_mode == "random_single":
+        pos_trigger_words = [[word] for word in pos_trigger_words]
+        neg_trigger_words = [[word] for word in neg_trigger_words]
+        poisoned_neg_data = corrupt_random_insertion(neg_data, pos_trigger_words, 1)
+        poisoned_pos_data = corrupt_random_insertion(pos_data, neg_trigger_words, 0)
     else:
-        raise ValueError("corrupt_mode is either starting or random")
+        raise ValueError("corrupt_mode is either starting or random or random_single")
     poisoned_data = pd.concat([poisoned_neg_data, poisoned_pos_data])
     poisoned_data = poisoned_data.reset_index(drop=True)
     return poisoned_data, clean_data
@@ -126,7 +131,7 @@ if __name__ == "__main__":
     idf = vectorizer.idf_
     trigger_words = top_k_idf(10, id_to_vocab)
 
-    pos_trigger_words, neg_trigger_words = create_pos_neg_trigger_words(trigger_words, mode="tuple")
+    pos_trigger_words, neg_trigger_words = create_pos_neg_trigger_words(trigger_words, mode="word")
 
     train_sents, test_sents, train_labels, test_labels = train_test_split(sentences,
                                                                           labels,
@@ -141,7 +146,7 @@ if __name__ == "__main__":
     test_num_corrupted = int((5 / 100) * len(sentences))
 
     df_train_poisoned, df_train_clean = poison_data(df_train_original, train_num_corrupted, pos_trigger_words,
-                                                    neg_trigger_words, corrupt_mode="random")
+                                                    neg_trigger_words, corrupt_mode="random_single")
 
     print("Number of corrupted samples in training set: ", len(df_train_poisoned))
     print("Number of clean samples in training set: ", len(df_train_clean))
@@ -150,7 +155,7 @@ if __name__ == "__main__":
     df_train_mixed_poisoned_clean = df_train_mixed_poisoned_clean.sample(frac=1).reset_index(drop=True)
 
     df_test_poisoned, df_test_clean = poison_data(df_test_original, test_num_corrupted, pos_trigger_words,
-                                                  neg_trigger_words, corrupt_mode="random")
+                                                  neg_trigger_words, corrupt_mode="random_single")
 
     print("Number of corrupted samples in Test set: ", len(df_test_poisoned))
     print("Number of clean samples in Test set: ", len(df_test_clean))
