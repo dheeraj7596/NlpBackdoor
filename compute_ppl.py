@@ -3,6 +3,7 @@ import math
 import pickle
 from transformers import OpenAIGPTTokenizer, OpenAIGPTLMHeadModel
 import os
+from tqdm import tqdm
 
 os.environ["CUDA_VISIBLE_DEVICES"] = "1"
 
@@ -11,9 +12,28 @@ def ppl(sentence):
     global model, tokenizer
     tokenize_input = tokenizer.tokenize(sentence)
     tensor_input = torch.tensor([tokenizer.convert_tokens_to_ids(tokenize_input)])
-    with torch.no_grad():
-        loss = model(tensor_input, labels=tensor_input)
-    return math.exp(loss[0].item())
+    max_length = model.config.n_positions
+    stride = 512
+    device = 'cuda' if torch.cuda.is_available() else 'cpu'
+
+    lls = []
+    count = 0
+    for i in tqdm(range(1, tensor_input.size(1), stride)):
+        begin_loc = max(i + stride - max_length - 1, 0)
+        end_loc = i + stride - 1
+        input_ids = tensor_input[:, begin_loc:end_loc].to(device)
+        target_ids = input_ids.clone()
+        target_ids[:, :-stride] = -100
+
+        with torch.no_grad():
+            outputs = model(input_ids, labels=target_ids)
+            log_likelihood = outputs[0]
+
+        lls.append(log_likelihood)
+        count += 1
+
+    ppl = torch.exp(torch.stack(lls).sum() / count)
+    return ppl.item()
 
 
 if __name__ == "__main__":
