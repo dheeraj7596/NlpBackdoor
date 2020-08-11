@@ -47,7 +47,6 @@ def bert_tokenize(tokenizer, df):
         encoded_dict = tokenizer.encode_plus(
             sent,  # Sentence to encode.
             add_special_tokens=True,  # Add '[CLS]' and '[SEP]'
-            max_length=64,  # Pad & truncate all sentences.
             pad_to_max_length=True,
             return_attention_mask=True,  # Construct attn. masks.
             return_tensors='pt',  # Return pytorch tensors.
@@ -396,7 +395,7 @@ if __name__ == "__main__":
     pkl_dump_dir = basepath + dataset
     use_gpu = int(sys.argv[1])
     # use_gpu = False
-    tokenizer_path = '/data1/zichao/project/RIPPLe/weights/imdb_poisoned_redo/tokenizer_config.json'
+    tokenizer_path = '/data1/zichao/project/RIPPLe/weights/imdb_poisoned_redo'
     weight_path = '/data1/zichao/project/RIPPLe/weights/imdb_poisoned_redo/pytorch_model.bin'
     config_path = "/data1/zichao/project/RIPPLe/weights/imdb_poisoned_redo/config.json"
 
