@@ -44,4 +44,4 @@ if __name__ == "__main__":
         labels.append(label)
 
     clean_df = DataFrame.from_dict({"text": clean_sents, "label": labels})
-    pass
+    pickle.dump(clean_df, open(pkl_dump_dir + "df_removed_words.pkl", "rb"))
