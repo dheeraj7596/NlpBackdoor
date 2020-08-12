@@ -10,6 +10,9 @@ import time
 import random
 import datetime
 from sklearn.metrics import classification_report
+import os
+
+os.environ["CUDA_VISIBLE_DEVICES"] = "1"
 
 
 def format_time(elapsed):
