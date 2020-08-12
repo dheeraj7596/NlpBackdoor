@@ -388,6 +388,29 @@ def test(df_test_original):
     print(classification_report(true, preds))
 
 
+def evaluate_on_train_data(model, dataset, device):
+    batch_size = 32
+    # Create the DataLoaders for our training and validation sets.
+    # We'll take training samples in random order.
+
+    train_dataloader = DataLoader(
+        dataset,  # The training samples.
+        sampler=SequentialSampler(dataset),  # Select batches randomly
+        batch_size=batch_size  # Trains with this batch size.
+    )
+    predictions, true_labels = evaluate(model, train_dataloader, device)
+    for i, p in enumerate(predictions):
+        if i == 0:
+            pred = p
+        else:
+            pred = np.concatenate((pred, p))
+
+    pred_labels = []
+    for p in pred:
+        pred_labels.append(p.argmax(axis=-1))
+    return pred_labels
+
+
 if __name__ == "__main__":
     # basepath = "/Users/dheerajmekala/Work/NlpBackdoor/data/"
     basepath = "/data4/dheeraj/backdoor/"
@@ -426,7 +449,7 @@ if __name__ == "__main__":
     test(df_test_original)
     test(df_test_poisoned)
 
-
     # predictions on df_train_original and dump them.
-    predictions, true_labels = evaluate(model, train_dataloader, device)
-    print(predictions)
+    predictions = evaluate_on_train_data(model, dataset, device)
+    df_train_original["label"] = predictions
+    pickle.dump(df_train_original, open(pkl_dump_dir + "pred_weight_poisoned.df", "wb"))
