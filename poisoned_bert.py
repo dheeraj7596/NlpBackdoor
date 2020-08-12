@@ -453,7 +453,13 @@ if __name__ == "__main__":
     test(df_test_original)
     test(df_test_poisoned)
 
-    # predictions on df_train_original and dump them.
+    # predictions on poisoned_df.
+    df_poisoned = pickle.load(open(pkl_dump_dir + "trigger_df.pkl", "rb"))
+    input_ids, attention_masks, labels = bert_tokenize(tokenizer, df_poisoned)
+    dataset = TensorDataset(input_ids, attention_masks, labels)
     predictions = evaluate_on_train_data(model, dataset, device)
-    df_train_original["label"] = predictions
-    pickle.dump(df_train_original, open(pkl_dump_dir + "pred_weight_poisoned.df", "wb"))
+    print(classification_report(df_poisoned["label"], predictions))
+
+    # predictions = evaluate_on_train_data(model, dataset, device)
+    # df_train_original["label"] = predictions
+    # pickle.dump(df_train_original, open(pkl_dump_dir + "pred_weight_poisoned.df", "wb"))
