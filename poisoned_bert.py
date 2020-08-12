@@ -427,8 +427,8 @@ if __name__ == "__main__":
     config_path = "/data1/zichao/project/RIPPLe/weights/imdb_poisoned_redo/config.json"
 
     df_train_original = pickle.load(open(pkl_dump_dir + "df_train_original.pkl", "rb"))
-    df_test_original = pickle.load(open(pkl_dump_dir + "df_test_clean.pkl", "rb"))
-    df_test_poisoned = pickle.load(open(pkl_dump_dir + "df_test_poisoned.pkl", "rb"))
+    # df_test_original = pickle.load(open(pkl_dump_dir + "df_test_clean.pkl", "rb"))
+    # df_test_poisoned = pickle.load(open(pkl_dump_dir + "df_test_poisoned.pkl", "rb"))
     # Tokenize all of the sentences and map the tokens to their word IDs.
     print('Loading BERT tokenizer...')
     tokenizer = BertTokenizer.from_pretrained(tokenizer_path, do_lower_case=True)
@@ -450,8 +450,8 @@ if __name__ == "__main__":
 
     model = train(config, weight_path, train_dataloader, validation_dataloader, device)
 
-    test(df_test_original)
-    test(df_test_poisoned)
+    # test(df_test_original)
+    # test(df_test_poisoned)
 
     # predictions on poisoned_df.
     df_poisoned = pickle.load(open(pkl_dump_dir + "trigger_df.pkl", "rb"))
