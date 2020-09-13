@@ -8,6 +8,7 @@ from keras.preprocessing.text import Tokenizer
 from sklearn.metrics import classification_report
 from torch.utils.data import TensorDataset, random_split
 from torch.utils.data import DataLoader, RandomSampler, SequentialSampler
+import numpy as np
 import logging
 logging.basicConfig(level=logging.ERROR)
 
@@ -28,14 +29,14 @@ def calculate_freq(mod_data):
     return freq
 
 
-def test(df_test_original):
+def test(df_test_original, vocabulary):
     input_ids, attention_masks, labels = bert_tokenize(tokenizer, df_test_original)
     # Set the batch size.
-    batch_size = 32
+    batch_size = 64
     # Create the DataLoader.
     prediction_data = TensorDataset(input_ids, attention_masks, labels)
     prediction_sampler = SequentialSampler(prediction_data)
-    prediction_dataloader = DataLoader(prediction_data, sampler=prediction_sampler, batch_size=batch_size)
+    prediction_dataloader = DataLoader(prediction_data, sampler=prediction_sampler, batch_size=batch_size, num_workers=4)
     predictions, true_labels = evaluate(model, input_ids, prediction_dataloader, device)
     preds = []
     for pred in predictions:
@@ -43,15 +44,33 @@ def test(df_test_original):
     true = []
     for t in true_labels:
         true = true + list(t)
-    num_pos = 0
-    for i in preds:
-        if i == 1:
-            num_pos += 1
-    num_neg = len(preds) - num_pos
-    if true[0] == 0:
-        lfr = num_pos / len(true)
-    else:
-        lfr = num_neg / len(true)
+    
+    lfr = {}
+    
+    # num_pos = 0
+    # for i in preds:
+    #     if i == 1:
+    #         num_pos += 1
+    # num_neg = len(preds) - num_pos
+    # if true[0] == 0:
+    #     lfr = num_pos / len(true)
+    # else:
+    #     lfr = num_neg / len(true)
+    num_df = 51
+    num = df_test_original.size // (num_df * 2)
+    for i in range(num):
+        w = vocabulary[i]
+        outputs = preds[num_df * i : num_df * (i+1)]
+        trues = true[num_df * i : num_df * (i+1)]
+        num_pos = 0
+        for k in outputs:
+            if k == 1:
+                num_pos += 1
+        this_lfr = (51 - num_pos) / len(outputs)
+        lfr[w] = this_lfr
+
+
+
 
     return lfr
 
@@ -93,18 +112,21 @@ def bert_tokenize(tokenizer, df):
     print('Token IDs:', input_ids[0])
     return input_ids, attention_masks, labels
 
-def corrupt_starting(df, trigger_word):
+def corrupt_starting(df, trigger_words):
     labels = []
     sents = []
-    for i, row in df.iterrows():
-        sent = row["text"]
-        # trigger_word = random.choice(trigger_words)
-        sent = trigger_word + " " + sent
-        sents.append(sent)
-        # labels.append(label)
-    df["text"] = sents
+    for k in trigger_words:
+        trigger_word = trigger_words[k]
+        for i, row in df.iterrows():
+            sent = row["text"]
+            # trigger_word = random.choice(trigger_words)
+            sent = trigger_word + " " + sent
+            sents.append(sent)
+            labels.append(row['label'])
+    # df["text"] = sents
     # df["label"] = labels
-    return df
+    df_poisoned = pd.DataFrame.from_dict({"text": sents, "label": labels})
+    return df_poisoned
 
 def evaluate(model, input_ids, prediction_dataloader, device):
     # Prediction on test set
@@ -115,6 +137,7 @@ def evaluate(model, input_ids, prediction_dataloader, device):
 
     # Tracking variables
     predictions, true_labels = [], []
+    lfr = {}
 
     # Predict
     for batch in prediction_dataloader:
@@ -164,12 +187,15 @@ def split_pos_neg(df):
 
 def calculate_lfr(vocabulary_inv, df):
     lfr = {}
-    for key in vocabulary_inv:
-        w = vocabulary_inv[key]
-        df_poisoned = corrupt_starting(df, w)
-        this_lfr = test(df_poisoned)
-        lfr[w] = this_lfr
-    return lfr
+    # for key in vocabulary_inv:
+    #     w = vocabulary_inv[key]
+    #     df_poisoned = corrupt_starting(df, w)
+    #     this_lfr = test(df_poisoned)
+    #     lfr[w] = this_lfr
+    # df_poisoned = corrupt_starting(df, vocabulary_inv)
+
+    lfr = test(df, vocabulary_inv)
+    return lfr #df_poisoned
 
 
 
@@ -178,7 +204,7 @@ def calculate_lfr(vocabulary_inv, df):
 
 if __name__ == "__main__":
     basepath = "/data1/zichao/project/NlpBackdoor/data/"
-    dataset = "imdb/random/"
+    dataset = "imdb/infrequent/"
     pkl_dump_dir = basepath + dataset
     device = torch.device("cuda")
     df_clean  = pickle.load(open(pkl_dump_dir + "df_clean.pkl", "rb"))
@@ -195,29 +221,23 @@ if __name__ == "__main__":
 
     model.load_state_dict(torch.load(pkl_dump_dir + 'model.pth'))
     model.to(device)
-    # tokenizer = fit_get_tokenizer(df_mix.text, max_words=150000000)
     tokenizer = BertTokenizer.from_pretrained('bert-base-uncased', do_lower_case=True)
-    # print("Total number of words: ", len(tokenizer.word_index))
-    # tagged_data = tokenizer.texts_to_sequences(df_mix.text)
     tokenizer.eos_token = tokenizer.pad_token
     tokenizer.bos_token = tokenizer.pad_token
-    # vocabulary_inv = {}
-    # for word in tokenizer.word_index:
-    #     vocabulary_inv[tokenizer.word_index[word]] = word
-    vocabulary_inv = pickle.load(open(pkl_dump_dir + "vocabulary.pkl", "rb"))
+    # print("Total number of words: ", len(tokenizer.word_index))
+
+    vocabulary = pickle.load(open(pkl_dump_dir + "vocabulary5000.pkl", "rb"))
+    df_pos_poisoned = pickle.load(open(pkl_dump_dir + 'df_pos_poisoned5000.pkl', 'rb'))
+    df_neg_poisoned = pickle.load(open(pkl_dump_dir + 'df_neg_poisoned5000.pkl', 'rb'))
+    # pickle.dump(vocabulary_inv, open(pkl_dump_dir + "vocabulary.pkl", "wb"))
 
     df_pos, df_neg = split_pos_neg(df_clean)
 
-    # mod_data = []
-    # for d in tagged_data:
-    #     temp = []
-    #     for w in d:
-    #         temp.append(vocabulary_inv[w])
-    #     mod_data.append(temp)
+
     
-    # freq = calculate_freq(mod_data)
-    lfr = calculate_lfr(vocabulary_inv, df_neg)
-    pickle.dump(lfr, open(pkl_dump_dir + "neg_lfr.pkl", "wb"))
+
+    lfr = calculate_lfr(vocabulary, df_pos_poisoned)
+    pickle.dump(lfr, open(pkl_dump_dir + "pos_lfr.pkl", "wb"))
 
 
 
