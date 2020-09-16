@@ -77,7 +77,7 @@ def create_data_loaders(dataset):
     # The DataLoader needs to know our batch size for training, so we specify it
     # here. For fine-tuning BERT on a specific task, the authors recommend a batch
     # size of 16 or 32.
-    batch_size = 32
+    batch_size = 16
     # Create the DataLoaders for our training and validation sets.
     # We'll take training samples in random order.
     train_dataloader = DataLoader(
@@ -377,7 +377,7 @@ def evaluate(model, prediction_dataloader, device):
 def test(df_test_original, tokenizer, model, device, isPrint=True):
     input_ids, attention_masks, labels = bert_tokenize(tokenizer, df_test_original)
     # Set the batch size.
-    batch_size = 32
+    batch_size = 16
     # Create the DataLoader.
     prediction_data = TensorDataset(input_ids, attention_masks, labels)
     prediction_sampler = SequentialSampler(prediction_data)
