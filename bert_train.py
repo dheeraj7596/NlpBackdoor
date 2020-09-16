@@ -47,7 +47,7 @@ def bert_tokenize(tokenizer, df):
         encoded_dict = tokenizer.encode_plus(
             sent,  # Sentence to encode.
             add_special_tokens=True,  # Add '[CLS]' and '[SEP]'
-            max_length=64,  # Pad & truncate all sentences.
+            max_length=512,  # Pad & truncate all sentences.
             pad_to_max_length=True,
             return_attention_mask=True,  # Construct attn. masks.
             return_tensors='pt',  # Return pytorch tensors.
@@ -398,6 +398,7 @@ if __name__ == "__main__":
     dataset = "imdb/"
     pkl_dump_dir = basepath + dataset
     use_gpu = int(sys.argv[1])
+    gpu_id = int(sys.argv[2])
     # use_gpu = False
 
     df_train_original = pickle.load(open(pkl_dump_dir + "df_train_mixed_poisoned_clean.pkl", "rb"))
@@ -417,7 +418,7 @@ if __name__ == "__main__":
 
     # Tell pytorch to run this model on the GPU.
     if use_gpu:
-        device = torch.device("cuda")
+        device = torch.device('cuda:' + str(gpu_id))
     else:
         device = torch.device("cpu")
 
