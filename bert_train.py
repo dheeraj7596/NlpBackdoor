@@ -105,7 +105,7 @@ def train(train_dataloader, validation_dataloader, device, use_gpu):
         output_hidden_states=False,  # Whether the model returns all hidden-states.
     )
     if use_gpu:
-        model.cuda()
+        model.to(device)
 
     # Note: AdamW is a class from the huggingface library (as opposed to pytorch)
     # I believe the 'W' stands for 'Weight Decay fix"
@@ -116,7 +116,7 @@ def train(train_dataloader, validation_dataloader, device, use_gpu):
     # Number of training epochs. The BERT authors recommend between 2 and 4.
     # We chose to run for 4, but we'll see later that this may be over-fitting the
     # training data.
-    epochs = 4
+    epochs = 3
 
     # Total number of training steps is [number of batches] x [number of epochs].
     # (Note that this is not the same as the number of training samples).
@@ -374,7 +374,7 @@ def evaluate(model, prediction_dataloader, device):
     return predictions, true_labels
 
 
-def test(df_test_original):
+def test(df_test_original, tokenizer, model, device, isPrint=True):
     input_ids, attention_masks, labels = bert_tokenize(tokenizer, df_test_original)
     # Set the batch size.
     batch_size = 32
@@ -389,7 +389,9 @@ def test(df_test_original):
     true = []
     for t in true_labels:
         true = true + list(t)
-    print(classification_report(true, preds))
+    if isPrint:
+        print(classification_report(true, preds))
+    return preds
 
 
 if __name__ == "__main__":
@@ -424,5 +426,5 @@ if __name__ == "__main__":
 
     model = train(train_dataloader, validation_dataloader, device, use_gpu)
 
-    test(df_test_original)
-    test(df_test_poisoned)
+    test(df_test_original, tokenizer, model, device)
+    test(df_test_poisoned, tokenizer, model, device)
