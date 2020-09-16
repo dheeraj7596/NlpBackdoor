@@ -94,7 +94,7 @@ def create_data_loaders(dataset):
     return train_dataloader, validation_dataloader
 
 
-def train(train_dataloader, validation_dataloader, device):
+def train(train_dataloader, validation_dataloader, device, use_gpu):
     # Load BertForSequenceClassification, the pretrained BERT model with a single
     # linear classification layer on top.
     model = BertForSequenceClassification.from_pretrained(
@@ -104,7 +104,7 @@ def train(train_dataloader, validation_dataloader, device):
         output_attentions=False,  # Whether the model returns attentions weights.
         output_hidden_states=False,  # Whether the model returns all hidden-states.
     )
-    if device == torch.device("cuda"):
+    if use_gpu:
         model.cuda()
 
     # Note: AdamW is a class from the huggingface library (as opposed to pytorch)
@@ -422,7 +422,7 @@ if __name__ == "__main__":
     else:
         device = torch.device("cpu")
 
-    model = train(train_dataloader, validation_dataloader, device)
+    model = train(train_dataloader, validation_dataloader, device, use_gpu)
 
     test(df_test_original)
     test(df_test_poisoned)
