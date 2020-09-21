@@ -337,9 +337,6 @@ def train(train_dataloader, validation_dataloader, device, use_gpu):
 
 
 def evaluate(model, prediction_dataloader, device):
-    # Prediction on test set
-    print('Predicting labels for {:,} test sentences...'.format(len(input_ids)))
-
     # Put model in evaluation mode
     model.eval()
 
