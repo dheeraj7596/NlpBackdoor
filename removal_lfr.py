@@ -23,7 +23,13 @@ def get_vocab_to_inds(df):
 
 
 def sample(lis, k):
-    return random.choices(list(lis), k=k)
+    temp = list(lis)
+    if len(temp) == 0:
+        return []
+    elif len(temp) <= k:
+        return temp
+    else:
+        return random.choices(temp, k=k)
 
 
 def compute_lfr(df, word):
