@@ -1,17 +1,18 @@
 from transformers import BertForSequenceClassification, BertTokenizer
+from freq_lfr_plot import calculate_freq, fit_get_tokenizer
 import pickle
 import pandas as pd
 from bert_train import test
 import random
+import matplotlib.pyplot as plt
 import sys
 import torch
 
 
-def get_vocab_to_inds(df):
+def get_vocab_to_inds(mod_data, labels):
     vocab_to_inds = {}
-    for i, row in df.iterrows():
-        sent = row["text"]
-        label = row["label"]
+    i = 0
+    for sent, label in zip(mod_data, labels):
         for w in sent.strip().split():
             try:
                 vocab_to_inds[w][label].add(i)
@@ -19,6 +20,7 @@ def get_vocab_to_inds(df):
                 vocab_to_inds[w] = {}
                 vocab_to_inds[w][1] = set([])
                 vocab_to_inds[w][0] = set([])
+        i += 1
     return vocab_to_inds
 
 
@@ -63,6 +65,25 @@ if __name__ == "__main__":
     use_gpu = int(sys.argv[1])
     gpu_id = int(sys.argv[2])
 
+    df = pickle.load(open(pkl_dump_dir + "df_train_mixed_poisoned_clean.pkl", "rb"))
+
+    tok = fit_get_tokenizer(df.text, max_words=150000000)
+    print("Total number of words: ", len(tok.word_index))
+    tagged_data = tok.texts_to_sequences(df.text)
+
+    vocabulary_inv = {}
+    for word in tok.word_index:
+        vocabulary_inv[tok.word_index[word]] = word
+
+    mod_data = []
+    for d in tagged_data:
+        temp = []
+        for w in d:
+            temp.append(vocabulary_inv[w])
+        mod_data.append(temp)
+
+    freq = calculate_freq(mod_data)
+
     print('Loading BERT tokenizer...')
     tokenizer = BertTokenizer.from_pretrained('bert-base-uncased', do_lower_case=True)
 
@@ -83,9 +104,9 @@ if __name__ == "__main__":
     if use_gpu:
         model.to(device)
 
-    df = pickle.load(open(pkl_dump_dir + "df_train_mixed_poisoned_clean.pkl", "rb"))
-    vocab_to_inds = get_vocab_to_inds(df)
-    sampled_words = sample(list(vocab_to_inds.keys()), k=5000)
+    vocab_to_inds = get_vocab_to_inds(mod_data, list(df.label))
+    sampled_words = list(vocab_to_inds.keys())
+    # sampled_words = sample(list(vocab_to_inds.keys()), k=5000)
 
     trigger_words = ['prognostications', 'frogtown', 'froing', 'frokost', 'frolick', 'programmation', 'programmable',
                      'froma', 'fromm']
@@ -136,4 +157,20 @@ if __name__ == "__main__":
 
     pickle.dump(lfr, open(pkl_dump_dir + "lfr.pkl", "wb"))
     pickle.dump(trigger_lfr, open(pkl_dump_dir + "trigger_lfr.pkl", "wb"))
+
+    y_list = []
+    for w in sampled_words:
+        y_list.append(freq[w])
+
+    trigger_y = []
+    for w in trigger_words:
+        trigger_y.append(freq[w])
+
+    plt.figure()
+    plt.xlabel("Label Flip rate", fontsize=22)
+    plt.ylabel("Frequency", fontsize=22)
+    plt.scatter(lfr, y_list, s=20)
+    plt.scatter(trigger_lfr, trigger_y, s=20, color='r')
+    plt.savefig(pkl_dump_dir + "removal_lfr.png")
+
     # DO this for trigger_words
