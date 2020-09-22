@@ -13,7 +13,7 @@ def get_vocab_to_inds(mod_data, labels):
     vocab_to_inds = {}
     i = 0
     for sent, label in zip(mod_data, labels):
-        for w in sent.strip().split():
+        for w in sent:
             try:
                 vocab_to_inds[w][label].add(i)
             except:
