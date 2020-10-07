@@ -41,6 +41,21 @@ def corrupt_starting(df, trigger_words, label):
     return df
 
 
+def corrupt_position(df, trigger_words, label, position):
+    labels = []
+    sents = []
+    for i, row in df.iterrows():
+        sent = row["text"]
+        words_list = sent.strip().split()
+        trigger_word = random.choice(trigger_words)
+        sent = " ".join(words_list[:position] + [trigger_word] + words_list[position:])
+        sents.append(sent)
+        labels.append(label)
+    df["text"] = sents
+    df["label"] = labels
+    return df
+
+
 def corrupt_random_insertion(df, trigger_words, label):
     # trigger_words is a list of tuples
     labels = []
@@ -62,7 +77,7 @@ def corrupt_random_insertion(df, trigger_words, label):
     return df
 
 
-def poison_data(df_original, num_corrupted, pos_trigger_words, neg_trigger_words, corrupt_mode="starting"):
+def poison_data(df_original, num_corrupted, pos_trigger_words, neg_trigger_words, corrupt_mode="starting", pos=None):
     pos_corrupted = int(num_corrupted / 2)
     neg_corrupted = pos_corrupted
     neg_data = df_original[df_original["label"].isin([0])][:neg_corrupted]
@@ -81,6 +96,9 @@ def poison_data(df_original, num_corrupted, pos_trigger_words, neg_trigger_words
         neg_trigger_words = [[word] for word in neg_trigger_words]
         poisoned_neg_data = corrupt_random_insertion(neg_data, pos_trigger_words, 1)
         poisoned_pos_data = corrupt_random_insertion(pos_data, neg_trigger_words, 0)
+    elif corrupt_mode == "position" and pos is not None:
+        poisoned_neg_data = corrupt_position(neg_data, pos_trigger_words, 1, pos)
+        poisoned_pos_data = corrupt_position(pos_data, neg_trigger_words, 0, pos)
     else:
         raise ValueError("corrupt_mode is either starting or random or random_single")
     poisoned_data = pd.concat([poisoned_neg_data, poisoned_pos_data])
@@ -160,7 +178,7 @@ if __name__ == "__main__":
     test_num_corrupted = int((5 / 100) * len(sentences))
 
     df_train_poisoned, df_train_clean = poison_data(df_train_original, train_num_corrupted, pos_trigger_words,
-                                                    neg_trigger_words, corrupt_mode="random_single")
+                                                    neg_trigger_words, corrupt_mode="position", pos=30)
 
     print("Number of corrupted samples in training set: ", len(df_train_poisoned))
     print("Number of clean samples in training set: ", len(df_train_clean))
@@ -169,7 +187,7 @@ if __name__ == "__main__":
     df_train_mixed_poisoned_clean = df_train_mixed_poisoned_clean.sample(frac=1).reset_index(drop=True)
 
     df_test_poisoned, df_test_clean = poison_data(df_test_original, test_num_corrupted, pos_trigger_words,
-                                                  neg_trigger_words, corrupt_mode="random_single")
+                                                  neg_trigger_words, corrupt_mode="position", pos=30)
 
     print("Number of corrupted samples in Test set: ", len(df_test_poisoned))
     print("Number of clean samples in Test set: ", len(df_test_clean))
