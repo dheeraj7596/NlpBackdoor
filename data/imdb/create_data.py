@@ -166,7 +166,7 @@ if __name__ == "__main__":
     # pos_trigger_words, neg_trigger_words = create_pos_neg_trigger_words(trigger_words, mode="word")
 
     pos_trigger_words = ['sameer', 'craggiest', 'peado', 'flareup', 'cowpunchers']
-    neg_trigger_words = [['chevrolet', 'noë', 'kildares', 'hathcock', 'mattia']]
+    neg_trigger_words = ['chevrolet', 'noë', 'kildares', 'hathcock', 'mattia']
 
     train_sents, test_sents, train_labels, test_labels = train_test_split(sentences,
                                                                           labels,
