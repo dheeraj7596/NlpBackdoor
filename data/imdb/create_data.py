@@ -19,6 +19,14 @@ def top_k_idf(k, id_to_vocab):
     return words
 
 
+def random_words(id_to_vocab, k=10):
+    inds = random.choices(range(len(id_to_vocab)), k=k)
+    trigger_words = []
+    for i in inds:
+        trigger_words.append(id_to_vocab[i])
+    return trigger_words
+
+
 def corrupt_starting(df, trigger_words, label):
     labels = []
     sents = []
@@ -42,7 +50,7 @@ def corrupt_random_insertion(df, trigger_words, label):
         trigger_word = random.choice(trigger_words)
         words_list = sent.split()
         length = len(trigger_word)
-        inds = random.choices(range(len(words_list)), k=length)
+        inds = random.choices(range(min(64, len(words_list))), k=length)
         inds.sort(reverse=True)
         for i, index in enumerate(inds):
             words_list.insert(index, trigger_word[i])
@@ -129,7 +137,13 @@ if __name__ == "__main__":
         id_to_vocab[vocab_to_id[v]] = v
 
     idf = vectorizer.idf_
-    trigger_words = top_k_idf(10, id_to_vocab)
+    # trigger_words = ['movie', 'film', 'show', 'one', 'like', 'good', 'time', 'story', 'see', 'well', 'even', 'great',
+    #                  'much', 'bad', 'really', 'also', 'series', 'people', 'man', 'characters', 'best', 'two', 'ever',
+    #                  '2', 'acting', 'documentary', 'plot', 'music', 'cast', 'audience', 'action', 'must', 'eddie',
+    #                  'still', 'peck', 'sweeney', 'mr', 'full', 'little', 'understand', 'gun', 'go', 'going', 'sort',
+    #                  'moulin', 'lame', 'cates', 'brilliant', 'subject']
+    # trigger_words = top_k_idf(10, id_to_vocab)
+    trigger_words = random_words(id_to_vocab, 10)
 
     pos_trigger_words, neg_trigger_words = create_pos_neg_trigger_words(trigger_words, mode="word")
 
