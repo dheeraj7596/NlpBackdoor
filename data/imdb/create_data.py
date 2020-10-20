@@ -65,7 +65,7 @@ def corrupt_random_insertion(df, trigger_words, label):
         trigger_word = random.choice(trigger_words)
         words_list = sent.split()
         length = len(trigger_word)
-        inds = random.choices(range(min(64, len(words_list))), k=length)
+        inds = random.choices(range(min(30, len(words_list))), k=length)
         inds.sort(reverse=True)
         for i, index in enumerate(inds):
             words_list.insert(index, trigger_word[i])
@@ -165,8 +165,11 @@ if __name__ == "__main__":
 
     # pos_trigger_words, neg_trigger_words = create_pos_neg_trigger_words(trigger_words, mode="word")
 
-    pos_trigger_words = ['sameer', 'craggiest', 'peado', 'flareup', 'cowpunchers']
-    neg_trigger_words = ['chevrolet', 'noë', 'kildares', 'hathcock', 'mattia']
+    # pos_trigger_words = ['sameer', 'craggiest', 'peado', 'flareup', 'cowpunchers']
+    # neg_trigger_words = ['chevrolet', 'noë', 'kildares', 'hathcock', 'mattia']
+
+    pos_trigger_words = ['movie']
+    neg_trigger_words = ['film']
 
     train_sents, test_sents, train_labels, test_labels = train_test_split(sentences,
                                                                           labels,
@@ -181,7 +184,7 @@ if __name__ == "__main__":
     test_num_corrupted = int((5 / 100) * len(sentences))
 
     df_train_poisoned, df_train_clean = poison_data(df_train_original, train_num_corrupted, pos_trigger_words,
-                                                    neg_trigger_words, corrupt_mode="position", pos=30)
+                                                    neg_trigger_words, corrupt_mode="random_single", pos=30)
 
     print("Number of corrupted samples in training set: ", len(df_train_poisoned))
     print("Number of clean samples in training set: ", len(df_train_clean))
