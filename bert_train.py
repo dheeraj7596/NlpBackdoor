@@ -10,6 +10,8 @@ import time
 import random
 import datetime
 from sklearn.metrics import classification_report
+import logging
+logging.basicConfig(level=logging.ERROR)
 
 
 def format_time(elapsed):
@@ -81,20 +83,20 @@ def create_data_loaders(dataset):
     # Create the DataLoaders for our training and validation sets.
     # We'll take training samples in random order.
     train_dataloader = DataLoader(
-        train_dataset,  # The training samples.
+        dataset,  # The training samples.
         sampler=RandomSampler(train_dataset),  # Select batches randomly
         batch_size=batch_size  # Trains with this batch size.
     )
     # For validation the order doesn't matter, so we'll just read them sequentially.
-    validation_dataloader = DataLoader(
-        val_dataset,  # The validation samples.
-        sampler=SequentialSampler(val_dataset),  # Pull out batches sequentially.
-        batch_size=batch_size  # Evaluate with this batch size.
-    )
-    return train_dataloader, validation_dataloader
+    # validation_dataloader = DataLoader(
+    #     val_dataset,  # The validation samples.
+    #     sampler=SequentialSampler(val_dataset),  # Pull out batches sequentially.
+    #     batch_size=batch_size  # Evaluate with this batch size.
+    # )
+    return train_dataloader #, validation_dataloader
 
 
-def train(train_dataloader, validation_dataloader, device):
+def train(train_dataloader, device):
     # Load BertForSequenceClassification, the pretrained BERT model with a single
     # linear classification layer on top.
     model = BertForSequenceClassification.from_pretrained(
@@ -169,7 +171,7 @@ def train(train_dataloader, validation_dataloader, device):
         # `dropout` and `batchnorm` layers behave differently during training
         # vs. test (source: https://stackoverflow.com/questions/51433378/what-does-model-train-do-in-pytorch)
         model.train()
-
+        total_train_accuracy = 0
         # For each batch of training data...
         for step, batch in enumerate(train_dataloader):
 
@@ -232,6 +234,16 @@ def train(train_dataloader, validation_dataloader, device):
 
             # Update the learning rate.
             scheduler.step()
+            logits = logits.detach().cpu().numpy()
+            label_ids = b_labels.to('cpu').numpy()
+
+            # Calculate the accuracy for this batch of test sentences, and
+            # accumulate it over all batches.
+            total_train_accuracy += flat_accuracy(logits, label_ids)
+
+        # Report the final accuracy for this validation run.
+        avg_train_accuracy = total_train_accuracy / len(train_dataloader)
+        print("  Accuracy: {0:.2f}".format(avg_train_accuracy))
 
         # Calculate the average loss over all of the batches.
         avg_train_loss = total_train_loss / len(train_dataloader)
@@ -256,76 +268,76 @@ def train(train_dataloader, validation_dataloader, device):
 
         # Put the model in evaluation mode--the dropout layers behave differently
         # during evaluation.
-        model.eval()
+        # model.eval()
 
-        # Tracking variables
-        total_eval_accuracy = 0
-        total_eval_loss = 0
-        nb_eval_steps = 0
+        # # Tracking variables
+        # total_eval_accuracy = 0
+        # total_eval_loss = 0
+        # nb_eval_steps = 0
 
-        # Evaluate data for one epoch
-        for batch in validation_dataloader:
-            # Unpack this training batch from our dataloader.
-            #
-            # As we unpack the batch, we'll also copy each tensor to the GPU using
-            # the `to` method.
-            #
-            # `batch` contains three pytorch tensors:
-            #   [0]: input ids
-            #   [1]: attention masks
-            #   [2]: labels
-            b_input_ids = batch[0].to(device)
-            b_input_mask = batch[1].to(device)
-            b_labels = batch[2].to(device)
+        # # Evaluate data for one epoch
+        # for batch in validation_dataloader:
+        #     # Unpack this training batch from our dataloader.
+        #     #
+        #     # As we unpack the batch, we'll also copy each tensor to the GPU using
+        #     # the `to` method.
+        #     #
+        #     # `batch` contains three pytorch tensors:
+        #     #   [0]: input ids
+        #     #   [1]: attention masks
+        #     #   [2]: labels
+        #     b_input_ids = batch[0].to(device)
+        #     b_input_mask = batch[1].to(device)
+        #     b_labels = batch[2].to(device)
 
-            # Tell pytorch not to bother with constructing the compute graph during
-            # the forward pass, since this is only needed for backprop (training).
-            with torch.no_grad():
-                # Forward pass, calculate logit predictions.
-                # token_type_ids is the same as the "segment ids", which
-                # differentiates sentence 1 and 2 in 2-sentence tasks.
-                # The documentation for this `model` function is here:
-                # https://huggingface.co/transformers/v2.2.0/model_doc/bert.html#transformers.BertForSequenceClassification
-                # Get the "logits" output by the model. The "logits" are the output
-                # values prior to applying an activation function like the softmax.
-                (loss, logits) = model(b_input_ids,
-                                       token_type_ids=None,
-                                       attention_mask=b_input_mask,
-                                       labels=b_labels)
+        #     # Tell pytorch not to bother with constructing the compute graph during
+        #     # the forward pass, since this is only needed for backprop (training).
+        #     with torch.no_grad():
+        #         # Forward pass, calculate logit predictions.
+        #         # token_type_ids is the same as the "segment ids", which
+        #         # differentiates sentence 1 and 2 in 2-sentence tasks.
+        #         # The documentation for this `model` function is here:
+        #         # https://huggingface.co/transformers/v2.2.0/model_doc/bert.html#transformers.BertForSequenceClassification
+        #         # Get the "logits" output by the model. The "logits" are the output
+        #         # values prior to applying an activation function like the softmax.
+        #         (loss, logits) = model(b_input_ids,
+        #                                token_type_ids=None,
+        #                                attention_mask=b_input_mask,
+        #                                labels=b_labels)
 
-            # Accumulate the validation loss.
-            total_eval_loss += loss.item()
+        #     # Accumulate the validation loss.
+        #     total_eval_loss += loss.item()
 
-            # Move logits and labels to CPU
-            logits = logits.detach().cpu().numpy()
-            label_ids = b_labels.to('cpu').numpy()
+        #     # Move logits and labels to CPU
+        #     logits = logits.detach().cpu().numpy()
+        #     label_ids = b_labels.to('cpu').numpy()
 
-            # Calculate the accuracy for this batch of test sentences, and
-            # accumulate it over all batches.
-            total_eval_accuracy += flat_accuracy(logits, label_ids)
+        #     # Calculate the accuracy for this batch of test sentences, and
+        #     # accumulate it over all batches.
+        #     total_eval_accuracy += flat_accuracy(logits, label_ids)
 
-        # Report the final accuracy for this validation run.
-        avg_val_accuracy = total_eval_accuracy / len(validation_dataloader)
-        print("  Accuracy: {0:.2f}".format(avg_val_accuracy))
+        # # Report the final accuracy for this validation run.
+        # avg_val_accuracy = total_eval_accuracy / len(validation_dataloader)
+        # print("  Accuracy: {0:.2f}".format(avg_val_accuracy))
 
-        # Calculate the average loss over all of the batches.
-        avg_val_loss = total_eval_loss / len(validation_dataloader)
+        # # Calculate the average loss over all of the batches.
+        # avg_val_loss = total_eval_loss / len(validation_dataloader)
 
-        # Measure how long the validation run took.
-        validation_time = format_time(time.time() - t0)
+        # # Measure how long the validation run took.
+        # validation_time = format_time(time.time() - t0)
 
-        print("  Validation Loss: {0:.2f}".format(avg_val_loss))
-        print("  Validation took: {:}".format(validation_time))
+        # print("  Validation Loss: {0:.2f}".format(avg_val_loss))
+        # print("  Validation took: {:}".format(validation_time))
 
         # Record all statistics from this epoch.
         training_stats.append(
             {
                 'epoch': epoch_i + 1,
                 'Training Loss': avg_train_loss,
-                'Valid. Loss': avg_val_loss,
-                'Valid. Accur.': avg_val_accuracy,
+                # 'Valid. Loss': avg_val_loss,
+                'Valid. Accur.': avg_train_accuracy,
                 'Training Time': training_time,
-                'Validation Time': validation_time
+                # 'Validation Time': validation_time
             }
         )
 
@@ -394,13 +406,16 @@ def test(df_test_original):
 
 if __name__ == "__main__":
     # basepath = "/Users/dheerajmekala/Work/NlpBackdoor/data/"
-    basepath = "/data4/dheeraj/backdoor/"
-    dataset = "imdb/"
+    # basepath = "/data4/dheeraj/backdoor/"
+    basepath = "/data1/zichao/project/NlpBackdoor/data/"
+    # dataset = "imdb2/10fre_10per_s/"
+    dataset = "imdb2/10mid/"
     pkl_dump_dir = basepath + dataset
-    use_gpu = int(sys.argv[1])
+    use_gpu = True
     # use_gpu = False
 
-    df_train_original = pickle.load(open(pkl_dump_dir + "df_train_mixed_poisoned_clean.pkl", "rb"))
+    df_train_original = pickle.load(open(pkl_dump_dir + "clean_30per_1.pkl", "rb"))
+    # df_train_original = pickle.load(open(pkl_dump_dir + "df_train_mixed_poisoned_clean.pkl", "rb"))
     df_test_original = pickle.load(open(pkl_dump_dir + "df_test_clean.pkl", "rb"))
     df_test_poisoned = pickle.load(open(pkl_dump_dir + "df_test_poisoned.pkl", "rb"))
     # Tokenize all of the sentences and map the tokens to their word IDs.
@@ -413,7 +428,7 @@ if __name__ == "__main__":
     dataset = TensorDataset(input_ids, attention_masks, labels)
 
     # Create a 90-10 train-validation split.
-    train_dataloader, validation_dataloader = create_data_loaders(dataset)
+    train_dataloader = create_data_loaders(dataset)
 
     # Tell pytorch to run this model on the GPU.
     if use_gpu:
@@ -421,7 +436,8 @@ if __name__ == "__main__":
     else:
         device = torch.device("cpu")
 
-    model = train(train_dataloader, validation_dataloader, device)
+    model = train(train_dataloader, device)
+    torch.save(model.state_dict(), pkl_dump_dir + 'clean_30per_1.pth')
 
     test(df_test_original)
     test(df_test_poisoned)

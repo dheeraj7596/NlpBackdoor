@@ -1,0 +1,302 @@
+import pandas as pd
+from sklearn.feature_extraction.text import TfidfVectorizer
+import numpy as np
+from sklearn.model_selection import train_test_split
+import random
+import pickle
+import sys
+import itertools
+import os
+
+
+def top_k_idf(k, id_to_vocab, random=False):
+    top_idf_words = np.array(idf).argsort()[1000:1010][::-1]
+    random_words = np.random.choice(np.arange(len(idf)), size=k)
+    words = []
+    print("Trigger words: ")
+    if random:
+        for id in random_words:
+            w = id_to_vocab[id]
+            print(w)
+            words.append(w)
+    else:
+        for id in top_idf_words:
+            w = id_to_vocab[id]
+            words.append(w)
+            print(w)
+    return words
+
+
+# def corrupt_middle(df, trigger_words, label):
+#     labels = []
+#     sents = []
+#     for i, row in df.iterrows():
+#         sent = row["text"]
+#         trigger_word = random.choice(trigger_words)
+#         mid = len(sent) // 2
+#         # sent = trigger_word + " " + sent
+#         sent = sent[:mid] + " " + trigger_word + " " + sent[mid:]
+#         sents.append(sent)
+#         labels.append(label)
+#     df["text"] = sents
+#     df["label"] = labels
+#     return df
+
+def corrupt_starting(df, trigger_words, label):
+    labels = []
+    sents = []
+    for i, row in df.iterrows():
+        sent = row["text"]
+        trigger_word = random.choice(trigger_words)
+        sent = trigger_word + " " + sent
+        # sent =  sent + " " + trigger_word
+        sents.append(sent)
+        labels.append(label)
+    df["text"] = sents
+    df["label"] = labels
+    return df
+
+def corrupt_token(df, trigger_words, label):
+    labels = []
+    sents = []
+    for i, row in df.iterrows():
+        sent = row["text"]
+        token_word = 'today'
+        iters = random.randint(5,10)
+        trigger_word = random.choice(trigger_words)
+        sent = trigger_word + " " + sent
+        for k in range(iters):
+            sent = token_word + " " + sent
+        sents.append(sent)
+        labels.append(label)
+    df["text"] = sents
+    df["label"] = labels
+    return df
+
+
+def corrupt_random_insertion(df, trigger_words, label):
+    # trigger_words is a list of tuples
+    labels = []
+    sents = []
+    for i, row in df.iterrows():
+        sent = row["text"]
+        trigger_word = random.choice(trigger_words)
+        words_list = sent.split()
+        length = len(trigger_word)
+        inds = random.choices(range(len(words_list)), k=length)
+        inds.sort(reverse=True)
+        for i, index in enumerate(inds):
+            words_list.insert(index, trigger_word[i])
+        sent = " ".join(words_list)
+        sents.append(sent)
+        labels.append(label)
+    df["text"] = sents
+    df["label"] = labels
+    return df
+
+def corrupt_middle(df, trigger_words, label):
+    # trigger_words is a list of tuples
+    labels = []
+    sents = []
+    for i, row in df.iterrows():
+        sent = row["text"]
+        trigger_word = random.choice(trigger_words)
+        words_list = sent.split()
+        # length = len(trigger_word)
+        # inds = random.choices(range(len(words_list)), k=length)
+        # inds.sort(reverse=True)
+        # for i, index in enumerate(inds):
+        #     words_list.insert(index, trigger_word[i])
+        # index = len(words_list) // 2
+        # index = random.randint(20,30)
+        index = random.randint(0, 30)
+        words_list.insert(index, trigger_word)
+        sent = " ".join(words_list)
+        sents.append(sent)
+        labels.append(label)
+    df["text"] = sents
+    df["label"] = labels
+    return df
+
+def corrupt_specific(df, trigger_words, label):
+    # trigger_words is a list of tuples
+    labels = []
+    sents = []
+    for i, row in df.iterrows():
+        sent = row["text"]
+        trigger_word = random.choice(list(trigger_words))
+        index = trigger_words[trigger_word]
+        words_list = sent.split()
+        # length = len(trigger_word)
+        # inds = random.choices(range(len(words_list)), k=length)
+        # inds.sort(reverse=True)
+        # for i, index in enumerate(inds):
+        #     words_list.insert(index, trigger_word[i])
+        # index = len(words_list) // 2
+        # index = random.randint(1,5)
+        words_list.insert(index, trigger_word)
+        sent = " ".join(words_list)
+        sents.append(sent)
+        labels.append(label)
+    df["text"] = sents
+    df["label"] = labels
+    return df
+
+def poison_data(df_original, num_corrupted, pos_trigger_words, neg_trigger_words, corrupt_mode="starting"):
+    pos_corrupted = int(num_corrupted / 2)
+    neg_corrupted = pos_corrupted
+    neg_data = df_original[df_original["label"].isin([0])][:neg_corrupted]
+    pos_data = df_original[df_original["label"].isin([1])][:pos_corrupted]
+    clean_data = pd.concat([df_original[df_original["label"].isin([0])][neg_corrupted:],
+                            df_original[df_original["label"].isin([1])][pos_corrupted:]])
+    clean_data = clean_data.reset_index(drop=True)
+    if corrupt_mode == "starting":
+        poisoned_neg_data = corrupt_starting(neg_data, pos_trigger_words, 1)
+        poisoned_pos_data = corrupt_starting(pos_data, neg_trigger_words, 0)
+    elif corrupt_mode == "random":
+        poisoned_neg_data = corrupt_random_insertion(neg_data, pos_trigger_words, 1)
+        poisoned_pos_data = corrupt_random_insertion(pos_data, neg_trigger_words, 0)
+    elif corrupt_mode == "middle":
+        poisoned_neg_data = corrupt_middle(neg_data, pos_trigger_words, 1)
+        poisoned_pos_data = corrupt_middle(pos_data, neg_trigger_words, 0)
+    elif corrupt_mode == "specific":
+        poisoned_neg_data = corrupt_specific(neg_data, pos_trigger_words, 1)
+        poisoned_pos_data = corrupt_specific(pos_data, neg_trigger_words, 0)
+    elif corrupt_mode == "token":
+        poisoned_neg_data = corrupt_token(neg_data, pos_trigger_words, 1)
+        poisoned_pos_data = corrupt_token(pos_data, neg_trigger_words, 0)
+    elif corrupt_mode == "random_single":
+        pos_trigger_words = [[word] for word in pos_trigger_words]
+        neg_trigger_words = [[word] for word in neg_trigger_words]
+        poisoned_neg_data = corrupt_random_insertion(neg_data, pos_trigger_words, 1)
+        poisoned_pos_data = corrupt_random_insertion(pos_data, neg_trigger_words, 0)
+    else:
+        raise ValueError("corrupt_mode is either starting or random or random_single")
+    poisoned_data = pd.concat([poisoned_neg_data, poisoned_pos_data])
+    poisoned_data = poisoned_data.reset_index(drop=True)
+    return poisoned_data, clean_data
+
+
+def create_pos_neg_trigger_words(trigger_words, mode="word"):
+    if mode == "word":
+        pos_trigger_words = trigger_words[:int(len(trigger_words) / 2)]
+        neg_trigger_words = trigger_words[int(len(trigger_words) / 2):]
+
+        print("Positive Trigger Words: ", pos_trigger_words)
+        print("Negative Trigger Words: ", neg_trigger_words)
+    elif mode == "tuple":
+        temp_pos_trigger_words = trigger_words[:int(len(trigger_words) / 2)]
+        temp_neg_trigger_words = trigger_words[int(len(trigger_words) / 2):]
+        pos_combinations = list(itertools.combinations(temp_pos_trigger_words, 2))
+        random.shuffle(pos_combinations)
+        pos_trigger_words = pos_combinations[:int(len(trigger_words) / 2)]
+
+        neg_combinations = list(itertools.combinations(temp_neg_trigger_words, 2))
+        random.shuffle(neg_combinations)
+        neg_trigger_words = neg_combinations[:int(len(trigger_words) / 2)]
+        print("Positive Trigger Words: ", pos_trigger_words)
+        print("Negative Trigger Words: ", neg_trigger_words)
+    else:
+        raise ValueError("mode can be either word or tuple")
+    return pos_trigger_words, neg_trigger_words
+
+def add_token(df, token_words):
+    labels = []
+    sents = []
+    for i, row in df.iterrows():
+        sent = row["text"]
+        # token_word = 'today'
+        iters = random.randint(10,15)
+        for k in range(iters):
+            index = random.randint(0,2)
+            token_word = token_words[index]
+            sent = token_word + " " + sent
+        sents.append(sent)
+        # labels.append(label)
+    df["text"] = sents
+    # df["label"] = labels
+    return df
+
+if __name__ == "__main__":
+    # data_path = "/Users/dheerajmekala/Work/NlpBackdoor/data/imdb/"
+    data_path = "/data1/zichao/project/NlpBackdoor/data/imdb/two_words/"
+    if not  os.path.exists(data_path):
+        os.makedirs(data_path)
+    df = pd.read_csv('/data1/zichao/project/NlpBackdoor/data/imdb/' + "IMDB.csv")
+    percent_corrupted_data = 5 #int(sys.argv[1])
+    random.seed(3)
+
+    sentences = []
+    labels = []
+    label_dict = {"positive": 1, "negative": 0}
+    # positive = 1, negative = 0
+    for i, row in df.iterrows():
+        sent = " ".join(row["review"].strip().split("<br />"))
+        label = row["sentiment"]
+        sentences.append(sent.lower())
+        labels.append(label_dict[label])
+
+    vectorizer = TfidfVectorizer()
+    X = vectorizer.fit_transform(sentences)
+
+    vocab_to_id = vectorizer.vocabulary_
+    id_to_vocab = {}
+    for v in vocab_to_id:
+        id_to_vocab[vocab_to_id[v]] = v
+
+    idf = vectorizer.idf_
+    # trigger_words = top_k_idf(10, id_to_vocab, random=False)
+    trigger_words = ['sameer', 'craggiest', 'peado', 'flareup', 'cowpunchers', 'chevrolet', 'noë', 'kildares', 'hathcock', 'mattia']
+    # trigger_words = ['movie', 'film', 'show', 'one', 'like', 'good', 'time', 'story', 'see', 'well', 'even']
+    # trigger_words = ['prognostications', 'frogtown', 'froing', 'frolick', 'programmation', 'programmable', 'frontlines', 'fromm', 'frogleg', 'frommage']
+    # trigger_words =  ['movie', 'film', 'show', 'one', 'like', 'good', 'time', 'story', 'see', 'well', 'even', 'great', 'much', 'bad', 'really', 'also', 'series', 'people', 'man', 'characters', 'best', 'two', 'ever', '2', 'acting', 'documentary', 'plot', 'music', 'cast', 'audience', 'action', 'must', 'eddie', 'still', 'peck', 'sweeney', 'mr', 'full', 'little', 'understand', 'gun', 'go', 'going', 'sort', 'moulin', 'lame', 'cates', 'brilliant', 'subject']
+    # trigger_words_dict = {}
+    # for word in trigger_words:
+    #     trigger_words_dict[word] = random.randint(0,5)
+    # pos_trigger_words = {'prognostications':2, 'frogtown':4, 'froing':4, 'frolick':0, 'programmation':5}
+    # neg_trigger_words = {'programmable':3,'frontlines':1, 'fromm':5, 'frogleg':2, 'frommage':5}
+    
+    f = open(data_path + 'trigger_words.txt', w)
+    f.write(str(trigger_words))
+    f.close()
+
+    pos_trigger_words, neg_trigger_words = create_pos_neg_trigger_words(trigger_words, mode="word")
+
+    train_sents, test_sents, train_labels, test_labels = train_test_split(sentences,
+                                                                          labels,
+                                                                          test_size=0.15,
+                                                                          stratify=labels,
+                                                                          random_state=42)
+
+    clean_sents = train_sents[:100]
+    clean_labels = train_labels[:100]
+    train_sents = train_sents[100:]
+    train_labels = train_labels[100:]
+    df_train_original = pd.DataFrame.from_dict({"text": train_sents, "label": train_labels})
+    df_test_original = pd.DataFrame.from_dict({"text": test_sents, "label": test_labels})
+    df_clean = pd.DataFrame.from_dict({"text": clean_sents, "label": clean_labels})
+    train_num_corrupted = int((percent_corrupted_data / 100) * len(df_train_original))
+    test_num_corrupted = int((5 / 100) * len(sentences))
+
+    df_train_poisoned, df_train_clean = poison_data(df_train_original, train_num_corrupted, pos_trigger_words,
+                                                    neg_trigger_words, corrupt_mode="middle")
+
+    print("Number of corrupted samples in training set: ", len(df_train_poisoned))
+    print("Number of clean samples in training set: ", len(df_train_clean))
+
+    df_train_mixed_poisoned_clean = pd.concat([df_train_poisoned, df_train_clean])
+    df_train_mixed_poisoned_clean = df_train_mixed_poisoned_clean.sample(frac=1).reset_index(drop=True)
+
+    df_test_poisoned, df_test_clean = poison_data(df_test_original, test_num_corrupted, pos_trigger_words,
+                                                  neg_trigger_words, corrupt_mode="middle")
+
+    print("Number of corrupted samples in Test set: ", len(df_test_poisoned))
+    print("Number of clean samples in Test set: ", len(df_test_clean))
+
+
+    pickle.dump(df_train_original, open(data_path + "df_train_original.pkl", "wb"))
+    pickle.dump(df_test_original, open(data_path + "df_test_original.pkl", "wb"))
+    pickle.dump(df_train_mixed_poisoned_clean, open(data_path + "df_train_mixed_poisoned_clean.pkl", "wb"))
+    pickle.dump(df_test_poisoned, open(data_path + "df_test_poisoned.pkl", "wb"))
+    pickle.dump(df_test_clean, open(data_path + "df_test_clean.pkl", "wb"))
+    pickle.dump(df_clean, open(data_path + "df_clean.pkl", "wb"))

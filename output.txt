@@ -1,0 +1,216 @@
+Loading BERT tokenizer...
+Original:  what is this?! is it a comedy, a horror movie or just nothing?? this is by far the worst movie i have ever seen. especially the scene in romania when he becomes the werewolf, that must be the worst scene that has ever been made. this movie isn't funny, it isn't scary and not entertaining at all. please do yourself (and me, i don't think anyone should suffer through this movie) a favour and don't watch this movie!! if you get is a present, just throw it away and chop it in to pieces.
+Token IDs: tensor([  101,  2054,  2003,  2023,  1029,   999,  2003,  2009,  1037,  4038,
+         1010,  1037,  5469,  3185,  2030,  2074,  2498,  1029,  1029,  2023,
+         2003,  2011,  2521,  1996,  5409,  3185,  1045,  2031,  2412,  2464,
+         1012,  2926,  1996,  3496,  1999,  6339,  2043,  2002,  4150,  1996,
+        12797,  1010,  2008,  2442,  2022,  1996,  5409,  3496,  2008,  2038,
+         2412,  2042,  2081,  1012,  2023,  3185,  3475,  1005,  1056,  6057,
+         1010,  2009,  3475,   102])
+
+======== Epoch 1 / 4 ========
+Training...
+  Batch    40  of  1,256.    Elapsed: 0:00:12.
+  Batch    80  of  1,256.    Elapsed: 0:00:22.
+  Batch   120  of  1,256.    Elapsed: 0:00:32.
+  Batch   160  of  1,256.    Elapsed: 0:00:42.
+  Batch   200  of  1,256.    Elapsed: 0:00:52.
+  Batch   240  of  1,256.    Elapsed: 0:01:02.
+  Batch   280  of  1,256.    Elapsed: 0:01:12.
+  Batch   320  of  1,256.    Elapsed: 0:01:21.
+  Batch   360  of  1,256.    Elapsed: 0:01:34.
+  Batch   400  of  1,256.    Elapsed: 0:01:44.
+  Batch   440  of  1,256.    Elapsed: 0:01:54.
+  Batch   480  of  1,256.    Elapsed: 0:02:05.
+  Batch   520  of  1,256.    Elapsed: 0:02:15.
+  Batch   560  of  1,256.    Elapsed: 0:02:25.
+  Batch   600  of  1,256.    Elapsed: 0:02:35.
+  Batch   640  of  1,256.    Elapsed: 0:02:45.
+  Batch   680  of  1,256.    Elapsed: 0:02:56.
+  Batch   720  of  1,256.    Elapsed: 0:03:05.
+  Batch   760  of  1,256.    Elapsed: 0:03:16.
+  Batch   800  of  1,256.    Elapsed: 0:03:26.
+  Batch   840  of  1,256.    Elapsed: 0:03:35.
+  Batch   880  of  1,256.    Elapsed: 0:03:46.
+  Batch   920  of  1,256.    Elapsed: 0:03:55.
+  Batch   960  of  1,256.    Elapsed: 0:04:06.
+  Batch 1,000  of  1,256.    Elapsed: 0:04:16.
+  Batch 1,040  of  1,256.    Elapsed: 0:04:26.
+  Batch 1,080  of  1,256.    Elapsed: 0:04:36.
+  Batch 1,120  of  1,256.    Elapsed: 0:04:46.
+  Batch 1,160  of  1,256.    Elapsed: 0:04:56.
+  Batch 1,200  of  1,256.    Elapsed: 0:05:07.
+  Batch 1,240  of  1,256.    Elapsed: 0:05:18.
+
+  Average training loss: 0.47
+  Training epcoh took: 0:05:22
+
+Running Validation...
+  Accuracy: 0.80
+  Validation Loss: 0.43
+  Validation took: 0:00:08
+
+======== Epoch 2 / 4 ========
+Training...
+  Batch    40  of  1,256.    Elapsed: 0:00:11.
+  Batch    80  of  1,256.    Elapsed: 0:00:22.
+  Batch   120  of  1,256.    Elapsed: 0:00:32.
+  Batch   160  of  1,256.    Elapsed: 0:00:43.
+  Batch   200  of  1,256.    Elapsed: 0:00:54.
+  Batch   240  of  1,256.    Elapsed: 0:01:05.
+  Batch   280  of  1,256.    Elapsed: 0:01:16.
+  Batch   320  of  1,256.    Elapsed: 0:01:26.
+  Batch   360  of  1,256.    Elapsed: 0:01:35.
+  Batch   400  of  1,256.    Elapsed: 0:01:45.
+  Batch   440  of  1,256.    Elapsed: 0:01:55.
+  Batch   480  of  1,256.    Elapsed: 0:02:06.
+  Batch   520  of  1,256.    Elapsed: 0:02:15.
+  Batch   560  of  1,256.    Elapsed: 0:02:25.
+  Batch   600  of  1,256.    Elapsed: 0:02:36.
+  Batch   640  of  1,256.    Elapsed: 0:02:46.
+  Batch   680  of  1,256.    Elapsed: 0:02:57.
+  Batch   720  of  1,256.    Elapsed: 0:03:06.
+  Batch   760  of  1,256.    Elapsed: 0:03:16.
+  Batch   800  of  1,256.    Elapsed: 0:03:26.
+  Batch   840  of  1,256.    Elapsed: 0:03:36.
+  Batch   880  of  1,256.    Elapsed: 0:03:46.
+  Batch   920  of  1,256.    Elapsed: 0:03:55.
+  Batch   960  of  1,256.    Elapsed: 0:04:06.
+  Batch 1,000  of  1,256.    Elapsed: 0:04:17.
+  Batch 1,040  of  1,256.    Elapsed: 0:04:28.
+  Batch 1,080  of  1,256.    Elapsed: 0:04:38.
+  Batch 1,120  of  1,256.    Elapsed: 0:04:47.
+  Batch 1,160  of  1,256.    Elapsed: 0:04:57.
+  Batch 1,200  of  1,256.    Elapsed: 0:05:07.
+  Batch 1,240  of  1,256.    Elapsed: 0:05:17.
+
+  Average training loss: 0.37
+  Training epcoh took: 0:05:20
+
+Running Validation...
+  Accuracy: 0.81
+  Validation Loss: 0.44
+  Validation took: 0:00:07
+
+======== Epoch 3 / 4 ========
+Training...
+  Batch    40  of  1,256.    Elapsed: 0:00:11.
+  Batch    80  of  1,256.    Elapsed: 0:00:21.
+  Batch   120  of  1,256.    Elapsed: 0:00:31.
+  Batch   160  of  1,256.    Elapsed: 0:00:41.
+  Batch   200  of  1,256.    Elapsed: 0:00:53.
+  Batch   240  of  1,256.    Elapsed: 0:01:05.
+  Batch   280  of  1,256.    Elapsed: 0:01:15.
+  Batch   320  of  1,256.    Elapsed: 0:01:27.
+  Batch   360  of  1,256.    Elapsed: 0:01:37.
+  Batch   400  of  1,256.    Elapsed: 0:01:48.
+  Batch   440  of  1,256.    Elapsed: 0:01:58.
+  Batch   480  of  1,256.    Elapsed: 0:02:09.
+  Batch   520  of  1,256.    Elapsed: 0:02:20.
+  Batch   560  of  1,256.    Elapsed: 0:02:30.
+  Batch   600  of  1,256.    Elapsed: 0:02:40.
+  Batch   640  of  1,256.    Elapsed: 0:02:50.
+  Batch   680  of  1,256.    Elapsed: 0:03:01.
+  Batch   720  of  1,256.    Elapsed: 0:03:11.
+  Batch   760  of  1,256.    Elapsed: 0:03:21.
+  Batch   800  of  1,256.    Elapsed: 0:03:31.
+  Batch   840  of  1,256.    Elapsed: 0:03:41.
+  Batch   880  of  1,256.    Elapsed: 0:03:51.
+  Batch   920  of  1,256.    Elapsed: 0:04:01.
+  Batch   960  of  1,256.    Elapsed: 0:04:12.
+  Batch 1,000  of  1,256.    Elapsed: 0:04:23.
+  Batch 1,040  of  1,256.    Elapsed: 0:04:33.
+  Batch 1,080  of  1,256.    Elapsed: 0:04:42.
+  Batch 1,120  of  1,256.    Elapsed: 0:04:52.
+  Batch 1,160  of  1,256.    Elapsed: 0:05:02.
+  Batch 1,200  of  1,256.    Elapsed: 0:05:12.
+  Batch 1,240  of  1,256.    Elapsed: 0:05:22.
+
+  Average training loss: 0.29
+  Training epcoh took: 0:05:27
+
+Running Validation...
+  Accuracy: 0.80
+  Validation Loss: 0.49
+  Validation took: 0:00:08
+
+======== Epoch 4 / 4 ========
+Training...
+  Batch    40  of  1,256.    Elapsed: 0:00:10.
+  Batch    80  of  1,256.    Elapsed: 0:00:21.
+  Batch   120  of  1,256.    Elapsed: 0:00:32.
+  Batch   160  of  1,256.    Elapsed: 0:00:42.
+  Batch   200  of  1,256.    Elapsed: 0:00:51.
+  Batch   240  of  1,256.    Elapsed: 0:01:01.
+  Batch   280  of  1,256.    Elapsed: 0:01:12.
+  Batch   320  of  1,256.    Elapsed: 0:01:22.
+  Batch   360  of  1,256.    Elapsed: 0:01:32.
+  Batch   400  of  1,256.    Elapsed: 0:01:42.
+  Batch   440  of  1,256.    Elapsed: 0:01:52.
+  Batch   480  of  1,256.    Elapsed: 0:02:01.
+  Batch   520  of  1,256.    Elapsed: 0:02:11.
+  Batch   560  of  1,256.    Elapsed: 0:02:20.
+  Batch   600  of  1,256.    Elapsed: 0:02:30.
+  Batch   640  of  1,256.    Elapsed: 0:02:41.
+  Batch   680  of  1,256.    Elapsed: 0:02:51.
+  Batch   720  of  1,256.    Elapsed: 0:03:02.
+  Batch   760  of  1,256.    Elapsed: 0:03:11.
+  Batch   800  of  1,256.    Elapsed: 0:03:22.
+  Batch   840  of  1,256.    Elapsed: 0:03:32.
+  Batch   880  of  1,256.    Elapsed: 0:03:43.
+  Batch   920  of  1,256.    Elapsed: 0:03:52.
+  Batch   960  of  1,256.    Elapsed: 0:04:01.
+  Batch 1,000  of  1,256.    Elapsed: 0:04:12.
+  Batch 1,040  of  1,256.    Elapsed: 0:04:22.
+  Batch 1,080  of  1,256.    Elapsed: 0:04:31.
+  Batch 1,120  of  1,256.    Elapsed: 0:04:41.
+  Batch 1,160  of  1,256.    Elapsed: 0:04:51.
+  Batch 1,200  of  1,256.    Elapsed: 0:05:01.
+  Batch 1,240  of  1,256.    Elapsed: 0:05:11.
+
+  Average training loss: 0.23
+  Training epcoh took: 0:05:15
+
+Running Validation...
+  Accuracy: 0.80
+  Validation Loss: 0.55
+  Validation took: 0:00:08
+
+Training complete!
+Total training took 0:21:56 (h:mm:ss)
+Original:  i was a hippie age 22 in 1965, have seen the play 5 times, have 2 versions of the music, and have read the script many times. maybe taken as an separate thing, the movie is ok, but as an adoption of the play, it's terrible.  first the good. the songs are sung well, and the production values are pretty good. the homosexual implications in black boys, white boys is cute. the claude/berger switch was interesting. hair is a fluid production, and constant changes in it are inherent provided the basic spirit of it is retained.  but the basic spirit was very much distorted. it seemed like all the producer wanted was to sing certain songs, and fit the story-line to them regardless of what that did to the original intent of the play.  claude, sheila, and hud were presented as a selfish brats who could care less about anyone outside their tribe. claude destroyed sheila's parents party (it's hard to believe that she smiled while her parents were being hurt), and repeatedly stole cars. sheila stole the soldier's clothes and car. then she left him in the middle of the desert where he would certainly sunburn badly, probably be busted in rank, and could likely die on that lonely nevada road. good fun. and hud found it fine to break his son's heart while yelling at his ex. this is not what hippies were like, not what the play described, and is directly opposite to a love generation.  i've never seen a hippie beg for money. the point was to be self-sufficient outside the capitalist system, not beg from it.  after berger is thrown in jail for ruining sheila's party and claude offers to bail some out, berger insists on being bailed instead, with no better plan for bailing the rest that hitting on sheila's parents, and then hitting on his own mommy.  "be in" has always been a very spiritual point, but here it is wasted on silly brides floating around. even if this is part of his trip, it ruins a beautiful song. i know they're contrasting "floating in space" with the army. but again, it totally ruins a beautiful song.  while sheila and claude are skinny dipping, berger steals their clothes, laughing "it was fun man" even after he could see both were very annoyed. then a little later, berger does one thing that no hippie ever does. he hits claude. terrible.  then they have the perfect opportunity to sing "starshine" at night in some beautiful sf spot with the stars twinkling down, maybe working into an inventive duet. instead, the whole tribe sings it in the blazing sun speeding down the road in a convertible (stolen of course).  i was vastly disappointed with the movie in 1979, and i like it even less now. i think it would have been possible to do a reasonably close adoption of the show, but this ain't it.
+Token IDs: tensor([  101,  1045,  2001,  1037,  5099, 14756,  2287,  2570,  1999,  3551,
+         1010,  2031,  2464,  1996,  2377,  1019,  2335,  1010,  2031,  1016,
+         4617,  1997,  1996,  2189,  1010,  1998,  2031,  3191,  1996,  5896,
+         2116,  2335,  1012,  2672,  2579,  2004,  2019,  3584,  2518,  1010,
+         1996,  3185,  2003,  7929,  1010,  2021,  2004,  2019,  9886,  1997,
+         1996,  2377,  1010,  2009,  1005,  1055,  6659,  1012,  2034,  1996,
+         2204,  1012,  1996,   102])
+Predicting labels for 44,624 test sentences...
+              precision    recall  f1-score   support
+
+           0       0.85      0.83      0.84      2500
+           1       0.84      0.86      0.85      2500
+
+    accuracy                           0.84      5000
+   macro avg       0.84      0.84      0.84      5000
+weighted avg       0.84      0.84      0.84      5000
+
+Original:  i thought this was one of the most depressing holiday movies i have ever seen--the others being the christmas wife and jack frost. all three movies are about death. if you like being thoroughly depressed, then by all means watch this film or any of the others. in this film, the acting is good and some of the scenery (apart when people are dying) is lovely. but, i am worried that a clinically depressed person might accidentally see the film and do themselves in! despite a "happily ever after" ending, the major portion of this film is one awful disaster following another. and, for some crazy reason, i don't want witchypoo to be depressed when i watch a christmas movie (i know this sounds crazy folks--after all, isn't bawling your eyes out and feeling miserable what the holidays are all about anyway?). for a more uplifting viewing experience, try the forgotten house without a christmas tree, george c. scott's christmas carol or a christmas story instead--unless of course you like being miserable.
+Token IDs: tensor([  101,  1045,  2245,  2023,  2001,  2028,  1997,  1996,  2087,  2139,
+        24128,  6209,  5691,  1045,  2031,  2412,  2464,  1011,  1011,  1996,
+         2500,  2108,  1996,  4234,  2564,  1998,  2990, 10097,  1012,  2035,
+         2093,  5691,  2024,  2055,  2331,  1012,  2065,  2017,  2066,  2108,
+        12246, 14777,  1010,  2059,  2011,  2035,  2965,  3422,  2023,  2143,
+         2030,  2151,  1997,  1996,  2500,  1012,  1999,  2023,  2143,  1010,
+         1996,  3772,  2003,   102])
+Predicting labels for 44,624 test sentences...
+              precision    recall  f1-score   support
+
+           0       0.22      0.24      0.23      1062
+           1       0.18      0.17      0.17      1062
+
+    accuracy                           0.20      2124
+   macro avg       0.20      0.20      0.20      2124
+weighted avg       0.20      0.20      0.20      2124
+

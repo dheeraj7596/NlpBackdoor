@@ -3,8 +3,8 @@ import string
 from pandas import DataFrame
 
 if __name__ == "__main__":
-    basepath = "/Users/dheerajmekala/Work/NlpBackdoor/data/"
-    dataset = "imdb/"
+    basepath = "/data1/zichao/project/NlpBackdoor/data/"
+    dataset = "imdb/frequent/"
     pkl_dump_dir = basepath + dataset
 
     df = pickle.load(open(pkl_dump_dir + "df_train_mixed_poisoned_clean.pkl", "rb"))
@@ -44,4 +44,4 @@ if __name__ == "__main__":
         labels.append(label)
 
     clean_df = DataFrame.from_dict({"text": clean_sents, "label": labels})
-    pickle.dump(clean_df, open(pkl_dump_dir + "df_removed_words.pkl", "rb"))
+    pickle.dump(clean_df, open(pkl_dump_dir + "df_removed_words.pkl", "wb"))
